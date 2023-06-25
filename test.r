@@ -21,6 +21,9 @@ x <- c(480.5033, 151.2696, 37.1686, 147.8196, 311.9625, 245.7312, 25.8936, 1328.
 #X: densidad de poblacion por km de muchos paises del mundo
 #https://www.kaggle.com/datasets/rajkumarpandey02/2023-world-population-by-country?resource=download
 
+
+set.seed(103016)
+
 # A
 estimar_mediana <- function(x) {
   func_empirica <- ecdf(x)
@@ -41,7 +44,7 @@ estimar_mediana <- function(x) {
 }
 
 intervalo_boot <- function(x, nivel) {
-  B = 500
+  B = 250
   replicaciones_bootstrap <- c() # VECTOR de medianas (titas sombrero)
   for (i in 1:B) {
     bootstrap_x <- sample(x, replace = TRUE)
@@ -63,12 +66,12 @@ cubrimiento_empirico <- function(n) {
   mediana_real <- 0.13863
   # explicar que hacemos https://youtu.be/0s3h1Tfysog?t=80 en el informe con probability distributions
   # Simulación de 1000 muestras aleatorias y cálculo de intervalos de confianza
-  num_simulaciones <- 500
+  num_simulaciones <- 250
   
   # M.A. ~ Exp(5)
   m_a_exponencial <- rexp(n, rate = lambda)
   hist(m_a_exponencial)
- 
+  
   longitudes <- numeric(num_simulaciones)  
   cant_cubiertos <- 0
   
@@ -77,9 +80,10 @@ cubrimiento_empirico <- function(n) {
     intervalo_i <- intervalo_boot(m_a_exponencial, nivel)
     a <- intervalo_i[1]
     b <- intervalo_i[2]
-
+    
     # Actualizamos la cantidad de intervalos que cubren la mediana
     # para luego devolver la proporcion
+
     if (a <= mediana_real && mediana_real <= b) {
       cant_cubiertos <- cant_cubiertos + 1
     }
@@ -87,7 +91,7 @@ cubrimiento_empirico <- function(n) {
     # Lista de longitudes (despues devolvemos el promedio)
     longitudes[i] <- b - a
   }
-  
+
   cubrimiento <- cant_cubiertos / num_simulaciones
   
   longitud_promedio <- mean(longitudes)
@@ -99,16 +103,29 @@ cubrimiento_empirico <- function(n) {
 print('Intervalo de confianza para x con nivel 0.95')
 intervalo_boot(x, 0.95)
 
+# C
 print('Cubrimiento empirico con n = 10')
-cubrimiento_empirico(10)
+c1 <- cubrimiento_empirico(10)
+print(c1)
 
 print('Cubrimiento empirico con n = 100')
-cubrimiento_empirico(100)
+c2 <- cubrimiento_empirico(100)
+print(c2)
 
 print('Cubrimiento empirico con n = 500')
-cubrimiento_empirico(500)
-
+c3 <- cubrimiento_empirico(500)
+print(c3)
 
 # el cubrimiento da 1 casi todas las veces que usamos nivel=0.95
 # si usamos por ejemplo nivel=0.75, vemos que tenemos un cubrimiento
 # bastante malo (asi que no es pq ande mal la funcion)
+
+
+df2 <- data.frame(
+  n = c(10, 100, 500),
+  cubrimiento = sapply(list(c1, c2, c3), function(x) x$cubrimiento),
+  longitud_promedio = sapply(list(c1, c2, c3), function(x) x$longitud_promedio)
+)
+print(df2)
+
+#
